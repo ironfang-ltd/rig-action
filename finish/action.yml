@@ -1,7 +1,7 @@
-# Finish an Ironfang Test run: the suite's expectations are judged against
+# Finish an Ironfang Rig run: the suite's expectations are judged against
 # the timeline and the outcome decides the step. Use with `if: always()`
 # so the run ends whatever the tests did.
-name: Finish Ironfang Test run
+name: Finish Ironfang Rig run
 description: Finish a run, print the verdicts and fail the step when the outcome is fail.
 author: Ironfang Ltd
 
@@ -20,10 +20,10 @@ inputs:
     description: When to fail the step - `fail` (the run's outcome is fail) or `never`.
     default: fail
   version:
-    description: The ironfang-test release to download and verify against its checksums.
+    description: The ironfang-rig release to download and verify against its checksums.
     default: 0.1.0
   binary:
-    description: A prebuilt ironfang-test binary to use instead of downloading.
+    description: A prebuilt ironfang-rig binary to use instead of downloading.
     default: ''
 runs:
   using: composite
@@ -39,7 +39,7 @@ runs:
         "$ACTION_PATH/../cli.sh" >> "$GITHUB_OUTPUT"
     - shell: bash
       env:
-        IRONFANG_TEST_BIN: ${{ steps.cli.outputs.bin }}
+        IRONFANG_RIG_BIN: ${{ steps.cli.outputs.bin }}
         INPUT_RUN_ID: ${{ inputs.run-id }}
         INPUT_OUTCOME: ${{ inputs.outcome }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
@@ -48,7 +48,7 @@ runs:
         args=(finish "$INPUT_RUN_ID")
         if [ -n "$INPUT_OUTCOME" ]; then args+=(--outcome "$INPUT_OUTCOME"); fi
         set +e
-        "$IRONFANG_TEST_BIN" "${args[@]}"
+        "$IRONFANG_RIG_BIN" "${args[@]}"
         code=$?
         set -e
         if [ "$code" -eq 3 ] && [ "$INPUT_FAIL_ON" = never ]; then
