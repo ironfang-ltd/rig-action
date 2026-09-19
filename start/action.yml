@@ -1,0 +1,78 @@
+# Start an Ironfang Test run from ironfang.test.yaml.
+#
+#   - id: ironfang
+#     uses: ironfang-ltd/test-action/start@v1
+#     env:
+#       IRONFANG_API_KEY: ${{ secrets.IRONFANG_API_KEY }}
+#   - run: npm run test:e2e
+#     env:
+#       TEST_EMAIL: ${{ env.IRONFANG_TEST_CUSTOMER_EMAIL }}
+#       STRIPE_WEBHOOK_URL: ${{ fromJSON(steps.ironfang.outputs.resources).stripe_callback }}
+#   - if: always()
+#     uses: ironfang-ltd/test-action/finish@v1
+#     with:
+#       run-id: ${{ steps.ironfang.outputs.run_id }}
+#
+# Every resource is exported to the job as IRONFANG_TEST_<NAME> and the
+# `resources` output carries them as JSON, because a composite action's
+# outputs are fixed at authoring time and resource names are yours.
+name: Start Ironfang Test run
+description: Sync ironfang.test.yaml and start a run; export its inbox, callback and mock addresses to the job.
+author: Ironfang Ltd
+
+branding:
+  icon: inbox
+  color: gray-dark
+
+inputs:
+  suite-file:
+    description: Path to ironfang.test.yaml.
+    default: ironfang.test.yaml
+  ttl:
+    description: Run lifetime, 1m to 24h; default from the suite.
+    default: ''
+  external-id:
+    description: Your reference for the run; default the workflow run id.
+    default: ''
+  version:
+    description: The ironfang-test release to download and verify against its checksums.
+    default: 0.1.0
+  binary:
+    description: A prebuilt ironfang-test binary to use instead of downloading.
+    default: ''
+outputs:
+  run_id:
+    description: The run id, for the finish action.
+    value: ${{ steps.start.outputs.run_id }}
+  resources:
+    description: JSON object of resource name to address.
+    value: ${{ steps.start.outputs.resources }}
+runs:
+  using: composite
+  steps:
+    - id: cli
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_BINARY: ${{ inputs.binary }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        "$ACTION_PATH/../cli.sh" >> "$GITHUB_OUTPUT"
+    - id: start
+      shell: bash
+      env:
+        IRONFANG_TEST_BIN: ${{ steps.cli.outputs.bin }}
+        INPUT_SUITE_FILE: ${{ inputs.suite-file }}
+        INPUT_TTL: ${{ inputs.ttl }}
+        INPUT_EXTERNAL_ID: ${{ inputs.external-id }}
+        DEFAULT_EXTERNAL_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
+      run: |
+        set -euo pipefail
+        if [ -z "${IRONFANG_API_KEY:-}" ]; then
+          echo "::error::IRONFANG_API_KEY is not set; pass a platform API key with test scopes through env" >&2
+          exit 2
+        fi
+        args=(run -f "$INPUT_SUITE_FILE" --output github --external-id "${INPUT_EXTERNAL_ID:-$DEFAULT_EXTERNAL_ID}")
+        if [ -n "$INPUT_TTL" ]; then args+=(--ttl "$INPUT_TTL"); fi
+        "$IRONFANG_TEST_BIN" "${args[@]}"
