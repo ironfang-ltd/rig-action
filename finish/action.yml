@@ -20,10 +20,10 @@ inputs:
     description: When to fail the step - `fail` (the run's outcome is fail) or `never`.
     default: fail
   version:
-    description: The ironfang-rig release to download and verify against its checksums.
-    default: 0.1.0
+    description: The ironfang CLI release (ironfang-ltd/cli) to download and verify against its checksums.
+    default: 0.2.0
   binary:
-    description: A prebuilt ironfang-rig binary to use instead of downloading.
+    description: A prebuilt ironfang binary to use instead of downloading.
     default: ''
 runs:
   using: composite
@@ -45,7 +45,7 @@ runs:
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
       run: |
         set -euo pipefail
-        args=(finish "$INPUT_RUN_ID")
+        args=(rig finish "$INPUT_RUN_ID")
         if [ -n "$INPUT_OUTCOME" ]; then args+=(--outcome "$INPUT_OUTCOME"); fi
         set +e
         "$IRONFANG_RIG_BIN" "${args[@]}"

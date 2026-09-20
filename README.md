@@ -64,8 +64,8 @@ test still closes the run and records the verdicts.
 | `suite-file` | `ironfang.rig.yaml` | Path to the suite file. |
 | `ttl` | from the suite | Run lifetime, `1m` to `24h`. |
 | `external-id` | the workflow run id | Your reference for the run. |
-| `version` | the release this action was cut with | The `ironfang-rig` release to download; it is verified against the release's SHA-256 sums before it runs. |
-| `binary` | | A prebuilt `ironfang-rig` to use instead of downloading. |
+| `version` | the release this action was cut with | The `ironfang` CLI release (from [ironfang-ltd/cli](https://github.com/ironfang-ltd/cli/releases)) to download; it is verified against the release's SHA-256 sums before it runs. |
+| `binary` | | A prebuilt `ironfang` to use instead of downloading. |
 
 Outputs: `run_id` and `resources`.
 
@@ -80,33 +80,34 @@ Outputs: `run_id` and `resources`.
 
 The actions run on Linux and macOS runners. On Windows, pass `binary`.
 
-## The command-line clients
+## The command-line client
 
-The actions wrap `ironfang-rig`, which also works on its own: sync a suite,
-start a run, wait for events, replay a callback, export the evidence bundle.
-`ironfang-connect` is the connector that forwards a run's callbacks to a
-port on your machine or runner without opening anything inbound. Both are
-single static binaries for Linux, macOS (Intel and Apple Silicon) and
-Windows, published on this repository's
-[Releases](https://github.com/ironfang-ltd/rig-action/releases) with a
+The actions wrap `ironfang rig`, part of the `ironfang` CLI, which also
+works on its own: sync a suite, start a run, wait for events, replay a
+callback, export and verify the evidence bundle. `ironfang rig connect` is
+the connector that forwards a run's callbacks to a port on your machine or
+runner without opening anything inbound. One static binary for Linux, macOS
+(Intel and Apple Silicon) and Windows, published on
+[ironfang-ltd/cli](https://github.com/ironfang-ltd/cli/releases) with a
 SHA-256 checksums file per release.
 
 ```
-tar -xzf ironfang-rig_0.1.0_linux_amd64.tar.gz
-sudo mv ironfang-rig_0.1.0_linux_amd64/ironfang-rig /usr/local/bin/
-ironfang-rig version
+curl -fsSL https://raw.githubusercontent.com/ironfang-ltd/cli/main/install.sh | sh
+ironfang version
 
 export IRONFANG_API_KEY=if_live_...
-ironfang-rig run -- npm test
+ironfang rig run -- npm test
 ```
 
 ```
 # Minted per run by the API or the rig.connector.prepare MCP tool:
-IRONFANG_CONNECT_TOKEN=ift_boot_... ironfang-connect \
+IRONFANG_CONNECT_TOKEN=ift_boot_... ironfang rig connect \
   --route stripe=http://127.0.0.1:8080/webhooks/stripe
 ```
 
-Verify a download with `sha256sum -c ironfang-rig_0.1.0_checksums.txt --ignore-missing`.
+Verify a download with `sha256sum -c ironfang_<version>_checksums.txt --ignore-missing`.
+The `ironfang-rig` and `ironfang-connect` releases on this repository stay
+for existing pins; new work should use `ironfang`.
 
 ## Licence
 

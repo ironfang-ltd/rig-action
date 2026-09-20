@@ -35,10 +35,10 @@ inputs:
     description: Your reference for the run; default the workflow run id.
     default: ''
   version:
-    description: The ironfang-rig release to download and verify against its checksums.
-    default: 0.1.0
+    description: The ironfang CLI release (ironfang-ltd/cli) to download and verify against its checksums.
+    default: 0.2.0
   binary:
-    description: A prebuilt ironfang-rig binary to use instead of downloading.
+    description: A prebuilt ironfang binary to use instead of downloading.
     default: ''
 outputs:
   run_id:
@@ -73,6 +73,6 @@ runs:
           echo "::error::IRONFANG_API_KEY is not set; pass a platform API key with rig scopes through env" >&2
           exit 2
         fi
-        args=(run -f "$INPUT_SUITE_FILE" --output github --external-id "${INPUT_EXTERNAL_ID:-$DEFAULT_EXTERNAL_ID}")
+        args=(rig run -f "$INPUT_SUITE_FILE" --output github --external-id "${INPUT_EXTERNAL_ID:-$DEFAULT_EXTERNAL_ID}")
         if [ -n "$INPUT_TTL" ]; then args+=(--ttl "$INPUT_TTL"); fi
         "$IRONFANG_RIG_BIN" "${args[@]}"
